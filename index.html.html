@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>معايدة رمضان للموظفين</title>
+    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        :root { --primary-color: #1a472a; --gold-color: #c9a227; }
+        body { font-family: 'Tajawal', sans-serif; background-color: #f0f2f5; display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; }
+        .container { max-width: 500px; width: 90%; background: white; padding: 30px; border-radius: 25px; box-shadow: 0 15px 35px rgba(0,0,0,0.05); }
+        h2 { text-align: center; color: var(--primary-color); margin-bottom: 30px; font-size: 24px; }
+        .section { margin-bottom: 25px; }
+        label { display: block; margin-bottom: 12px; font-weight: bold; color: #333; font-size: 14px; }
+        
+        /* خيارات الصور */
+        .grid-options { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+        .grid-options img { width: 100%; height: 70px; object-fit: cover; cursor: pointer; border: 2px solid #eee; border-radius: 12px; transition: all 0.3s ease; }
+        .grid-options img.selected { border-color: var(--gold-color); transform: scale(1.05); box-shadow: 0 5px 15px rgba(201, 162, 39, 0.2); }
+        
+        .calligraphy-options img { object-fit: contain; background: #fafafa; padding: 5px; box-sizing: border-box; }
+
+        input, select { width: 100%; padding: 14px; border: 1.5px solid #eee; border-radius: 10px; font-family: 'Tajawal'; font-size: 14px; outline: none; transition: 0.3s; }
+        input:focus { border-color: var(--primary-color); }
+        
+        .btn-generate { width: 100%; padding: 16px; background-color: var(--primary-color); color: white; border: none; border-radius: 12px; font-size: 16px; cursor: pointer; font-weight: bold; display: flex; align-items: center; justify-content: center; gap: 10px; transition: 0.3s; }
+        .btn-generate:hover { background-color: #12311d; opacity: 0.95; }
+
+        #preview-container { margin-top: 30px; display: none; text-align: center; }
+        canvas { max-width: 100%; height: auto; border-radius: 15px; border: 1px solid #ddd; }
+        .btn-download { background-color: var(--gold-color); margin-top: 15px; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h2>🌙 معايدة رمضان للموظفين</h2>
+
+    <div class="section">
+        <label>1. اختر خلفية البطاقة:</label>
+        <div class="grid-options" id="bgOptions">
+            <img src="https://cdn.jsdelivr.net/gh/imagesloads/images@main/img_e5c8e9f671e34ec7.png" data-src="bg1_full.jpg" class="selected">
+            <img src="https://cdn.jsdelivr.net/gh/imagesloads/images@main/img_e5c8e9f671e34ec7.png" data-src="bg2_full.jpg">
+            <img src="https://cdn.jsdelivr.net/gh/imagesloads/images@main/img_e5c8e9f671e34ec7.png" data-src="bg3_full.jpg">
+        </div>
+    </div>
+
+    <div class="section">
+        <label>2. اختر المخطوطة:</label>
+        <div class="grid-options calligraphy-options" id="calligraphyOptions">
+            <img src="https://eid.moveed.net/images/scripts/ramadan/0036.png" class="selected">
+            <img src="https://eid.moveed.net/images/scripts/ramadan/0036.png">
+            <img src="https://eid.moveed.net/images/scripts/ramadan/0036.png">
+        </div>
+    </div>
+
+    <div class="section">
+        <label>3. اختر عبارة التهنئة:</label>
+        <select id="messageText">
+            <option>بمناسبة حلول شهر رمضان المبارك</option>
+            <option>مبارك عليكم الشهر وكل عام وأنتم بخير</option>
+            <option>تقبل الله منا ومنكم صالح الأعمال</option>
+        </select>
+    </div>
+
+    <div class="section">
+        <label>4. الاسم الكريم:</label>
+        <input type="text" id="empName" placeholder="اكتب اسمك هنا">
+    </div>
+
+    <button class="btn-generate" onclick="generateCard()">عرض ومعالجة البطاقة ✨</button>
+
+    <div id="preview-container">
+        <canvas id="cardCanvas" width="1080" height="1080"></canvas>
+        <button class="btn-generate btn-download" onclick="downloadCard()">تحميل الصورة 📥</button>
+    </div>
+</div>
+
+<script>
+    // اختيار العناصر
+    function bindSelection(id) {
+        const imgs = document.querySelectorAll(`#${id} img`);
+        imgs.forEach(img => {
+            img.addEventListener('click', () => {
+                document.querySelectorAll(`#${id} img`).forEach(i => i.classList.remove('selected'));
+                img.classList.add('selected');
+            });
+        });
+    }
+    bindSelection('bgOptions');
+    bindSelection('calligraphyOptions');
+
+    async function generateCard() {
+        const canvas = document.getElementById('cardCanvas');
+        const ctx = canvas.getContext('2d');
+        const name = document.getElementById('empName').value || "زميلنا العزيز";
+        const message = document.getElementById('messageText').value;
+
+        // روابط الصور (استبدلها بروابطك الفعلية)
+        const bgSrc = document.querySelector('#bgOptions img.selected').dataset.src;
+        const calSrc = document.querySelector('#calligraphyOptions img.selected').dataset.src;
+
+        const loadImg = (src) => new Promise((res) => {
+            const img = new Image();
+            img.crossOrigin = "anonymous";
+            img.src = src;
+            img.onload = () => res(img);
+        });
+
+        const [bgImg, calImg] = await Promise.all([loadImg(bgSrc), loadImg(calSrc)]);
+
+        // 1. رسم الخلفية
+        ctx.drawImage(bgImg, 0, 0, 1080, 1080);
+
+        // 2. رسم المخطوطة (توسيط)
+        const calW = 500;
+        const calH = (calImg.height / calImg.width) * calW;
+        ctx.drawImage(calImg, (1080 - calW) / 2, 300, calW, calH);
+
+        // 3. كتابة النص والاسم
+        ctx.textAlign = "center";
+        ctx.fillStyle = "#ffffff"; 
+        ctx.font = "40px Tajawal";
+        ctx.fillText(message, 540, 700);
+
+        ctx.fillStyle = "#c9a227"; // ذهبي للاسم
+        ctx.font = "bold 60px Tajawal";
+        ctx.fillText(name, 540, 820);
+
+        document.getElementById('preview-container').style.display = 'block';
+        window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
+    }
+
+    function downloadCard() {
+        const link = document.createElement('a');
+        link.download = 'Ramadan_Greeting.png';
+        link.href = document.getElementById('cardCanvas').toDataURL();
+        link.click();
+    }
+</script>
+
+</body>
+</html>
